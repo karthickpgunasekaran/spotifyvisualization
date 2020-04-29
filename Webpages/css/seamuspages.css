@@ -1,0 +1,30 @@
+body {
+    background: #1f1f1f;
+    font-family: 'Open Sans', Helvetica, Arial, sans-serif;
+    color: #fff;
+  }
+
+#plotTitle{
+    text-align: center;
+}
+
+.plotOptionsText{
+    text-align: center;
+}
+
+.titleSelects{
+    font-size: 75%;
+    font-weight: bold;
+}
+
+.plotMarksAndLabels text{
+    fill: #fff;
+}
+
+.plotMarksAndLabels line{
+    stroke: #fff;
+}
+
+.plotMarksAndLabels path{
+    stroke: #fff;
+}

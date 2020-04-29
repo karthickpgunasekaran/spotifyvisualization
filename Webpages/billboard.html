@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<!--Create billboard for songs released in particular year as per their availability
+  //Song Popularity (0-100) where higher is better-->
+  <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>BillBoard</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+    </head>
+
+<body style="width:90%;height: 100%; margin:0 auto;">
+  <center>
+    <h1>Music Billboard (Most Popular Songs in a year)</h1>
+  </center>
+  <div style="width:90%; height: 100%; margin:0 auto;">
+    <div style="margin-top: 2%; margin-bottom: 2%;">
+    </div>
+    <div style="width:90%; margin:2%; text-align:center">
+        <b > Year </b>   
+        <select id="dropdown" ></select>
+    </div>
+    
+    <div style="width:100%; height:80%;  margin:0 auto;">
+      <svg id="dataviz_area" height=600 width=100%></svg>
+    </div>
+  </div>
+<script>
+      var file_name ="/data/nikita/billboard_for.csv"
+        var svg = d3.select("#dataviz_area")
+            .append("g");
+    
+  //to give background color
+   svg.append("rect")
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("fill", "#252b32")
+
+//this function wraps the text within the shape
+//courtesy - https://bl.ocks.org/mbostock/7555321 - wrap text
+function wrap(text, width) {
+  text.each(function() {
+    let text = d3.select(this),
+      words = text.text().split(/\s+/).reverse(),
+      word,
+      line = [],
+      lineNumber = 0,
+      lineHeight = 1.1, // ems
+      x = text.attr("x"),
+      y = text.attr("y"),
+      dy = 1.1,
+      tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+
+      while (word = words.pop()) {
+      line.push(word);
+      tspan.text(line.join(" "));
+      if (tspan.node().getComputedTextLength() > width) {
+        line.pop();
+        tspan.text(line.join(" "));
+        line = [word];
+        tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+      }
+    }
+  });
+}
+
+//drop down on click listeners
+d3.csv(file_name,function (data) {
+    // console.log(data)
+    //removing duplicates
+    var dummy = {}
+    for(var i =0; i< data.length;i++)
+    {
+      var concat = data[i].track_name + ":" + data[i].track_artist + ":" + data[i].track_album_release_date;
+      var ranking = data[i].track_popularity
+      
+      if(concat in dummy)
+      {
+        if(dummy[concat] < ranking)
+        {
+          dummy[concat] = ranking
+        }
+      }
+      else
+        {
+          dummy[concat]= ranking
+        }
+    }
+
+    console.log(dummy)
+    updated_data = []
+    
+    for( var key in dummy)
+    {
+      var concat = key
+      var splitted = concat.split(':')
+      var ranking = dummy[key]
+
+      final_entry = {}
+      final_entry['track_name'] = splitted[0]
+      final_entry['track_artist'] = splitted[1]
+      final_entry['track_album_release_date'] =splitted[2]
+      final_entry['track_popularity'] = ranking
+      updated_data.push(final_entry)
+    }
+
+    var data=updated_data
+
+    console.log(data)
+  
+
+    year_map={} // contains all the records as per their years as keys 
+    //creating hashmap of all the data w.r.t years
+    for(var j=0;j<data.length;j++)
+    { 
+      var year = new Date(data[j].track_album_release_date).getFullYear() 
+      if(!(year in year_map) ) // year not in map already
+      {
+        if(year <= 2020 && year>1980)
+        {
+            var list =[]
+            list.push(data[j]) 
+            year_map[year] = list
+        }
+      }
+      else{
+          //already year as key in map, extract  exisiting list then append to it
+          var list = year_map[year];
+          list.push(data[j])
+          year_map[year] = list
+        
+      }
+  }
+
+  //populating drop down
+  years = Object.keys(year_map);
+
+  console.log(years[0])
+
+  //default showing with minimum year
+  var data_subset = year_map[years[0]]
+      //sorting the elements, needs reverse sorted as highest popularity the bestttt
+      data_subset.sort(function(a, b){
+          return b.track_popularity - a.track_popularity;
+      });
+      console.log('json after',data_subset)
+      drawBillboard(data_subset)
+      
+  d3.select("#dropdown")
+    .selectAll('options')
+    .data(years)
+    .enter()
+    .append('option')
+    .text(function(d){
+        return d;
+    })
+    .attr('value',function(d){
+        return d;   
+    })
+    .attr("transform","translate(" + 0+ "," + 0 + ")")
+
+  d3.select("#dropdown").on("change",function(d)
+  {
+      var optionVal = d3.select(this).property("value")
+      console.log('clicked',optionVal)
+
+      var data_subset = year_map[optionVal]
+      //sorting the elements, needs reverse sorted as highest popularity the bestttt
+      data_subset.sort(function(a, b){
+          return b.track_popularity - a.track_popularity;
+      });
+      console.log('json after',data_subset)
+      drawBillboard(data_subset)
+  }) 
+  
+})
+
+function drawBillboard(data_subset)
+{
+  svg.selectAll("*").remove()
+  svg.append("rect")
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("fill", "#252b32")
+
+    var myColor = ["#ffc003", "#71ae48", "#4572c4","#ee7d31","#8fa2b3","#eeaab5"]
+    var top_picks = Math.min(15,data_subset.length)
+    var barPadding = 40;
+    var block_size = 180;
+    y = 10
+    x=40
+    count = 0 
+    color = myColor[0]
+    for(var i=0; i < top_picks; i++)
+    {
+        if (i%5 == 0 && i!=0) 
+        {
+            y = y+200
+            x = 40
+            count+=1
+            if(count>myColor.length)
+            { count =0 }
+            color = myColor[count]
+        }        
+        svg.append("rect")
+        .attr('x',x).attr('y',y).attr('width',200).attr('height',block_size)
+        .attr('fill','#fffff0').attr("stroke",'black')
+
+        svg.append('text').text(data_subset[i].track_name).attr('x',x+barPadding)
+        .attr('y',y+50).attr('fill','black').attr('font-size', "18px")
+            .call(wrap, 130)
+
+        svg.append("rect").attr('x',x).attr('y',y).attr('width',200).attr('height',40).attr('fill',color)
+
+        svg.append('text').text(data_subset[i].track_artist).attr('x',x+barPadding+10).attr('y',y+5).attr('fill','black').attr("font-size", "14px")
+        .call(wrap, 130)
+
+        x += 220
+    }
+}
+    
+    </script>
+
+</body>

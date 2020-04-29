@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<!--This file plots the tree map indicating the heirarchy of songs of different genres and their subgenres -->
+<!--For a particular year, get top 100 danceable(or any other attribute) song, and plot those with hue of popularity to see how popularity varies across attribute value -->
+<!--for a particular year-->
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Song Attributes Popularity</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    </head>
+    <h1 style="width:90%; margin:2%; text-align:center">
+        Popularity Variation with Song Attribute Values
+     </h1>
+
+<body style=" margin-left:30% auto;">
+<div id="attviz" style="margin-left:10%; margin-top: 5%;">
+</div>
+    <!--div for both the dropdowns-->
+  <div style=" margin-left:30%; display: inline-flex; align-items: center;">
+    
+    <div>
+        <svg id="scale_area"></svg>
+    </div>
+
+    <div >
+        <div style=" width: 100; display: flex; ">
+            <b >  Year</b> 
+            <select id="dropdownyear" ></select>
+        </div>
+
+        <div style=" width:100 ; display: flex; ">
+            <b >Song Attribute </b> <select id="dropdown" ></select>
+            
+        </div>
+    </div>
+    
+   
+  </div>
+    <script>
+        var file_name ="/data/nikita/attwithsong.csv"
+            width = "100%" 
+            height = 420
+            
+            var pick_elements=100
+
+        var svg = d3.select("#attviz")
+                .append("svg") 
+                .attr("width", "100%" )
+                .attr("height", "100%")
+                .append("g")
+                .attr("transform","translate(" + 0+ "," + 20 + ")");
+        
+        //Reads data from csv and processes it
+        d3.csv(file_name, function(data) {
+            //dataprocessing, this step helps in removing the duplicates from the data
+            //if name,artist and year exactly that entry is duplicate, and keeping the most popularity value out of same 
+            var dummy = {} 
+            for(var i =0; i< data.length;i++)
+            {
+                var concat = data[i].track_name + ":" + data[i].track_artist + ":" + data[i].track_album_release_date+":"+data[i].danceability+":"+data[i].energy+":"+data[i].acousticness+":"+data[i].liveness;
+                var ranking = data[i].track_popularity
+                if(concat in dummy)
+                {
+                    if(dummy[concat] < ranking)
+                    {
+                        dummy[concat] = ranking
+                    }
+                }
+                else
+                    {
+                        dummy[concat]= ranking
+                    }
+            }
+        
+        // putting it back in the expected format of json objects
+        updated_data = []
+        for( var key in dummy)
+        {
+            var concat = key
+            var splitted = concat.split(':')
+            var ranking = dummy[key]
+            final_entry = {}
+            final_entry['track_name'] = splitted[0]
+            final_entry['track_artist'] = splitted[1]
+            final_entry['track_album_release_date'] =splitted[2]
+            final_entry['track_popularity'] = ranking
+            final_entry['danceability'] = splitted[3]
+            final_entry['energy'] = splitted[4]
+            final_entry['acousticness'] = splitted[5]
+            final_entry['liveness'] = splitted[6]
+            updated_data.push(final_entry)
+        }
+
+        var data=updated_data // data after removing duplicates
+
+        // console.log('removed duplicates',data)
+
+        //segregating based on year
+        year_map={} // contains all the records as per their years as keys 
+        //creating hashmap of all the data w.r.t years
+        for(var j=0;j<data.length;j++)
+        { 
+            var year = new Date(data[j].track_album_release_date).getFullYear() 
+            if(!(year in year_map) ) // year not in map already
+            {
+                if(year <= 2020 && year>1980) // only between 1980 and 2020
+                {
+                    var list =[]
+                    list.push(data[j]) 
+                    year_map[year] = list
+                }
+            }
+            else{
+                //already year as key in map, extract  exisiting list then append to it
+                var list = year_map[year];
+                list.push(data[j])
+                year_map[year] = list
+            
+            }
+        }
+
+        // console.log('years',year_map)
+        //fetch years
+        var years = Object.keys(year_map);
+        // year dropdown, populate dropdown with fetched years
+        d3.select("#dropdownyear")
+        .selectAll('options')
+        .data(years)
+        .enter()
+        .append('option')
+        .text(function(d){
+            return d;
+        })
+        .attr('value',function(d){
+            return d;   
+        })
+        .attr("transform","translate(" + 0 + "," + 0 + ")")
+        
+        // var data_subset;
+        var attribute = "danceability"
+        var year = years[0]
+        getRequestedData(year,attribute)
+        //this dropdown let's pick the year and on change give the corresponding value of data to year
+        d3.select("#dropdownyear").on("change",function(d)
+        {
+            var optionVal = d3.select(this).property("value")
+            console.log('clicked year',optionVal)
+            year=optionVal
+            getRequestedData(year,attribute)
+        }) 
+
+        // attribute dropdown
+        var attributes = ['danceability','energy','acousticness','liveness']
+        d3.select("#dropdown")
+        .selectAll('options')
+        .data(attributes)
+        .enter()
+        .append('option')
+        .text(function(d){
+            return d;
+        })
+        .attr('value',function(d){
+            return d;   
+        })
+        .attr("transform","translate(" + 0+ "," + 0 + ")")
+
+        d3.select("#dropdown").on("change",function(d)
+        {
+            // console.log('data_subset',data_subset)
+            var optionVal = d3.select(this).property("value")
+            console.log('clicked att',optionVal)
+            attribute = optionVal
+            getRequestedData(year,attribute)
+        }) 
+        function getRequestedData(year,attribute)
+        {
+            svg.selectAll("*").remove()
+            console.log('func getRequestedData',year," ",attribute)
+            var data_subset = year_map[year] // dataset corresponding to year
+            var max_slice = Math.min(data_subset.length,pick_elements);
+            console.log('max_slice',max_slice)
+            data_subset =data_subset.slice(0,max_slice) //inclusive first and exclusive last
+            // console.log('data_subset first click',data_subset)
+            var  min,max;
+            data_subset.sort(function(a, b){
+                if(attribute=="danceability")
+                {
+                    console.log('sorting',attribute)
+                    return b.danceability - a.danceability;
+                }
+                else if (attribute=="energy")
+                {
+                    console.log('sorting',attribute)
+                    return b.energy - a.energy;
+                }
+                else if(attribute=="acousticness")
+                {
+                    console.log('sorting',attribute)
+                    return b.acousticness - a.acousticness;
+                }
+                else
+                {
+                    console.log('sorting',attribute)
+                    return b.liveness - a.liveness;
+                }
+                
+            });
+            console.log('json after',data_subset) 
+            // handling providing different colors as per popularity
+            popularity_scale= ['0-20', '20-40' ,'40-60','60-80','80-101']
+            opacity_val = ["#fe8686","#fe4c4c","#fe3637","#dc0000","#520000"]
+            opacity_dict ={}
+
+            //assigning opacity as per popularity
+            for(var i =0;i<popularity_scale.length;i++)
+            {
+                opacity_dict[popularity_scale[i]] = opacity_val[i]
+            }
+           
+           console.log('opacity_dict',opacity_dict)
+
+           mm_map = min_max(max_slice,data_subset,attribute)
+          
+           min = mm_map["min"]
+           max = mm_map["max"]
+           min = parseFloat(min)
+           max = parseFloat(max)
+           console.log(min)
+            
+           min_s = min.toString()
+           min_string = min_s.substring(0, min_s.length - 2);
+           amin = parseFloat(min_string)
+           console.log(min_string, amin)
+
+        //    min=10.001
+        //    min = parseFloat(min)
+          
+
+           console.log('min',min,'max',max)
+
+           var x = d3.scaleLinear()
+                .domain([amin, max])
+                .range([0, 1000 ]);
+                svg.append("g")
+                .attr("transform",
+                    "translate(" + 30+ "," + 30+ ")") 
+                .call(d3.axisBottom(x));
+
+            bubble_size = 4
+
+            svg.append('g')
+                .selectAll("dot")
+                .data(data_subset)
+                .enter()    
+                .append("circle")
+                .attr("transform",
+                    "translate(" + 30+ "," + 0 + ")")
+                .attr("cx", function (d) { 
+                    if(attribute=="danceability")
+                    {
+                        return x(d.danceability); 
+                    }
+                    else if (attribute=="energy")
+                    {
+                        return x(d.energy); 
+                    }
+                    else if(attribute=="acousticness")
+                    {
+                        return x(d.acousticness); 
+                    }
+                    else
+                    {
+                        return x(d.liveness);
+                    
+                    }
+                } )
+                .attr("cy", function (d) { 
+                    var val = Math.floor(Math.random() * 20) + 1 
+                    return val; 
+                } )
+                .attr("r", bubble_size )
+                .style("fill",function(d)
+                {
+                    var popularity = d.track_popularity
+                    // console.log('d',popularity)
+                    //find which band this popularity belongs to
+                    for(var key in opacity_dict)
+                    {
+                        // console.log('d inside ',popularity)
+                        range=key.split('-')
+                        // console.log('d inside range ',typeof range[0] , typeof range[1])
+                        var min =parseInt(range[0])
+                        var max = parseInt(range[1])
+                        // console.log('d inside range ',typeof min, typeof max)
+                        if(popularity>=min && popularity<max)
+                        {
+                            // console.log('d inside if ',popularity)
+                            // console.log('key',key,'value',opacity_dict[key])
+                            return opacity_dict[key]
+                        }
+                    }
+                } )
+                .attr("stroke", function(d)
+                {
+                    var popularity = d.track_popularity
+                    // console.log('d',popularity)
+                    //find which band this popularity belongs to
+                    for(var key in opacity_dict)
+                    {
+                        // console.log('d inside ',popularity)
+                        range=key.split('-')
+                        // console.log('d inside range ',typeof range[0] , typeof range[1])
+                        var min =parseInt(range[0])
+                        var max = parseInt(range[1])
+                        // console.log('d inside range ',typeof min, typeof max)
+                        if(popularity>=min && popularity<max)
+                        {
+                            // console.log('d inside if ',popularity)
+                            // console.log('key',key,'value',opacity_dict[key])
+                            return opacity_dict[key]
+                        }
+                    }
+                   
+                } )
+                .style("stroke-width", "1px")
+
+                // var dataArray = [5,10,13,19,21,25]
+
+                // var svg = d3.select("body").append("svg")
+                // .attr("width",500)
+                //                            .attr("height",500);
+
+                var svg_scale= d3.select("#scale_area")
+                                .append("g");
+
+                var dataArray = [1,2,3,4,5]
+                svg_scale.selectAll("rect")
+                    .data(dataArray) /*add data Array*/
+                    .enter() /*Enter and Exit D3 in depth*/
+                    .append("rect")
+                    /*because of fixing x and y this all of these are on top of each other same x and y position, can check with inspect element*/
+                    .attr("x",50) 
+                    .attr("y",function(d,i){
+                        return d*20;
+                    })
+                    // .attr("width",50)
+                    .attr("width",20)
+                    .attr("height",20)
+                    /*adding color to each rectangle*/
+                    .style("fill",function(d,i){
+                        return opacity_val[i];
+                    })
+                    .style('stroke','black')
+
+                    svg_scale.selectAll("text").data(dataArray) /*add data Array*/
+                    .enter() /*Enter and Exit D3 in depth*/
+                    .append('text').text(function(d,i){
+                        return popularity_scale[i]
+                    })
+                    .attr('x',10)
+                    .attr('y',function(d,i){
+                        // console.log('d',d) /*check with inspect element will iterate over d*/
+                        // console.log('i',i)
+                        return d*20 +12;
+                    }).attr('fill','black').attr("font-size", "14px")
+        }
+       
+                    })
+        
+        //finding out min max range
+        function  min_max(max_slice,data_subset,attribute)
+        {
+            var min=0;
+            var max=0;
+            if(attribute=="danceability")
+            {
+                console.log('min_max',attribute)
+                max=data_subset[0].danceability;
+                min=data_subset[max_slice-1].danceability;
+            }
+            else if (attribute=="energy")
+            {
+                console.log('min_max',attribute)
+                max=data_subset[0].energy;
+                min=data_subset[max_slice-1].energy;
+            }
+            else if(attribute=="acousticness")
+            {
+                console.log('min_max',attribute)
+                max=data_subset[0].acousticness;
+                min=data_subset[max_slice-1].acousticness;
+            }
+            else
+            {
+                console.log('min_max',attribute)
+                max=data_subset[0].liveness;
+                min=data_subset[max_slice-1].liveness;
+            
+            }
+                console.log('min_max',min,max)
+                min_max_map={}
+                min_max_map["min"]=min
+                min_max_map["max"]=max
+                return min_max_map
+        }
+        //referred to https://www.d3-graph-gallery.com/index.html
+    </script>
+   
+</body>

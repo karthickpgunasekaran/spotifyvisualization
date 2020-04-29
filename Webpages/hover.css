@@ -1,0 +1,11 @@
+.hovertool{
+    width: auto;
+    height: auto;
+    position: absolute;
+    text-align: center;
+    background: none  white;
+    border-radius: 7px;
+    color: black;
+    font: 15px;
+    padding: 5px;   
+}

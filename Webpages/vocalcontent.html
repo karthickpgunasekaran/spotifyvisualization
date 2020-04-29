@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<!--This files show the box whisker plot for songs of different genres and their instrumentalness value, that indicates how much vocal content song has
+instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content 
+Predicts whether a track contains no vocals. “Ooh” and “aah” sounds are treated as instrumental in this context. Rap or spoken word 
+tracks are clearly “vocal”. The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content.
+ Values above 0.5 are intended to represent instrumental tracks, but confidence is higher as the value approaches 1.0.-->
+<!--this shows the instrumentalness content of 4 types of genres, pop, latin r&b, rap which has similar level of vocal content unlike edm and rock-->
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Instrumentalness vs genres</title>
+        <!--Loading scripts-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <link rel="stylesheet" href="./hover.css">
+    </head>
+
+  <center>
+    <h1 style="width:90%; margin:1%; ">
+      Duration (in minutes) across Genres
+    </h1>
+    <div id="boxviz" style="display: flex;">
+    </div>
+
+  </center>
+   
+<!-- <div id="boxviz"></div> -->
+
+<script>
+   var file_name ="/data/nikita/remaing_genre.csv"
+    // set the dimensions and margins of the graph
+    var margin = {top: 80, right: 30, bottom: 30, left: 200},
+        width = 1300 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+      var tool = d3.select("body").append("div").attr("class", "hovertool");
+    
+    // append the svg object to the body of the page
+    var svg = d3.select("#boxviz")
+      .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+    
+    // Read the data and compute summary statistics - same file contains data of duration and instumental ness
+    d3.csv(file_name, function(data) {
+        // console.log('data',data)
+    
+      // Compute quartiles, median, inter quantile range min and max --> these info are then used to draw the box.
+      // nest function allows to group the calculation per level of a factor
+    
+      var data_entries = d3.nest() 
+        .key(function(d) { 
+            console.log(d.playlist_genre)
+            return d.playlist_genre;})
+        .rollup(function(d) {
+            console.log(d.playlist_genre)
+        //computing quartiles
+          q1 = d3.quantile(d.map(function(g) { return g.tmp_data;}).sort(d3.ascending),0.25)
+          median = d3.quantile(d.map(function(g) { return g.tmp_data;}).sort(d3.ascending),0.5)
+          q3 = d3.quantile(d.map(function(g) { return g.tmp_data;}).sort(d3.ascending),0.75)
+          interQuantileRange = (q3 - q1)
+          min = q1 - 1.5 * interQuantileRange
+          if(min <0){
+              min=0
+            }
+          max = q3 + 1.5 * interQuantileRange
+          console.log('details',',min',min,'q1',q1,'q3',q3,'max',max,'IQR',interQuantileRange)
+          return({q1: q1, median: median, q3: q3, interQuantileRange: interQuantileRange, min: min, max: max})
+        })
+        .entries(data)
+
+        console.log(JSON.stringify(data_entries));
+
+        
+      // Show the X scale
+      var x = d3.scaleBand()
+        .range([ 0, width])
+        .domain(["pop","rap", "latin","r&b"])
+        .paddingInner(1)
+        .paddingOuter(.5)
+        
+      svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x))
+
+        svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + (height-margin.top-110) + ")")
+        .call(x)
+        .append("text")      
+            .attr("x", (width / 2) )
+            .attr("y",  200 )
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .style("font-size", "20px") 
+            .text("Genres"); 
+       
+    
+      //  Y scale
+      var y = d3.scaleLinear()  
+        .domain([0,0.006])
+        .range([height, 0])
+      svg.append("g")
+          .call(d3.axisLeft(y))
+          
+     svg.append("g")
+        .attr("class", "y axis")
+        .call(y)    
+		.append("text") 
+		  .attr("transform", "rotate(-90)")
+		  .attr("y", 6)
+		  .attr("dy", "-3em")
+		  .style("text-anchor", "end")
+		  .style("font-size", "20px") 
+		  .text("Instrumentalness");	
+    
+      var myColor = {"pop": "#ffc003", 
+                     "edm": "#71ae48", 
+                     "latin":"#4572c4",
+                     "r&b":"#ee7d31",
+                     "rap":"#8fa2b3",
+                     "rock":"#eeaab5"}
+
+      // vertical line
+      svg
+        .selectAll("vertLines")
+        .data(data_entries)
+        .enter()
+        .append("line")
+          .attr("x1", function(d){return(x(d.key))})
+          .attr("x2", function(d){return(x(d.key))})
+          .attr("y1", function(d){return(y(d.value.min))})
+          .attr("y2", function(d){return(y(d.value.max))})
+          .attr("stroke", "grey")
+          .style("width", 20)
+
+
+        //   console.log(data.playlist_genre)
+      // rectangle for the main box
+      var boxWidth = 50
+
+      svg
+        .selectAll("boxes")
+        .data(data_entries)
+        .enter()
+        .append("rect")
+            .attr("x", function(d){return(x(d.key)-boxWidth/2)})
+            .attr("y", function(d){return(y(d.value.q3))})
+            .attr("height", function(d){
+                // console.log('d',d)
+                // console.log('here',y(d.value.q1)-y(d.value.q3))
+                return(y(d.value.q1)-y(d.value.q3))
+            })
+            .attr("width", boxWidth )
+            .text(function(d){ 
+                console.log(d.value.q1)
+                return d.value.q1 
+            })
+            .attr("stroke",function(d)
+            {
+                // console.log(d.key, myColor[d.key])
+                return myColor[d.key]
+            })
+            .style("fill",function(d)
+            {
+                return myColor[d.key]
+            }).on("mousemove", function (d) 
+              {
+                  tool.style("left", d3.event.pageX + 10 + "px")
+                  tool.style("top", d3.event.pageY - 20 + "px")
+                  tool.style("display", "inline-block");
+                  tool.html( ` <table style="margin-top: 1.5px;">
+                            <tr><td style="text-align: center">` + d.key + `</td></tr>
+                            <tr><td>Max: </td><td style="text-align: right">` + (d.value.max).toFixed(4) + `</td></tr>
+                            <tr><td>Q3: </td><td style="text-align: right">` + (d.value.q3).toFixed(4)  + `</td></tr>
+                            <tr><td>Median: </td><td style="text-align: right">` +(d.value.median).toFixed(4)  + `</td></tr>
+                            <tr><td>Q1: </td><td style="text-align: right">` + (d.value.q1).toFixed(4)  + `</td></tr>
+                            <tr><td>Min: </td><td style="text-align: right">` + (d.value.min).toFixed(4) + `</td></tr>
+
+                    </table>`);
+          }).on("mouseout", function (d) {
+              tool.style("display", "none");
+          })
+    
+     //upper horizontal line
+     svg
+        .selectAll("horizontalLine")
+        .data(data_entries)
+        .enter()
+        .append("line")
+          .attr("x1", function(d){return(x(d.key)-boxWidth/8) })
+          .attr("x2",  function(d){return(x(d.key)+boxWidth/8) })
+          .attr("y1", function(d){
+              console.log('y1',y(d.value.min))
+              return(y(d.value.min))})
+          .attr("y2", function(d){
+            console.log('y2',y(d.value.min))
+              return(y(d.value.min))})
+          .attr("stroke", "black")
+          .style("width", 20)
+
+        //lower horizontal line
+          svg
+        .selectAll("horizontalLine")
+        .data(data_entries)
+        .enter()
+        .append("line")
+          .attr("x1", function(d){return(x(d.key)-boxWidth/8) })
+          .attr("x2",  function(d){return(x(d.key)+boxWidth/8) })
+          .attr("y1", function(d){
+              console.log('y1',y(d.value.max))
+              return(y(d.value.max))})
+          .attr("y2", function(d){
+            console.log('y2',y(d.value.max))
+              return(y(d.value.max))})
+          .attr("stroke", "black")
+          .style("width", 20)
+
+      // Show the median
+      svg
+        .selectAll("medianLines")
+        .data(data_entries)
+        .enter()
+        .append("line")
+          .attr("x1", function(d){return(x(d.key)-boxWidth/2) })
+          .attr("x2", function(d){return(x(d.key)+boxWidth/2) })
+          .attr("y1", function(d){return(y(d.value.median))})
+          .attr("y2", function(d){return(y(d.value.median))})
+          .attr("stroke", "grey")
+          .style("width", 80)
+
+    // svg
+    //     .append("text")
+    //     .attr("x", margin.left+80)
+    //     .attr("y", -1)   
+    //     .text("Instrumentalness vs Genres")
+    //     .attr("font-size", "50px")
+    //     .attr("fill",  "grey" )
+        })
+    
+    </script>
+    </html>

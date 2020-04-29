@@ -1,0 +1,133 @@
+{
+	"children": [{
+			"name": "Pop",
+			"children": [{
+					"name": "Dance Pop",
+					"value": 1298,
+					"colname": "level3"
+				},
+				{
+					"name": "Electropop",
+					"value": 1408,
+					"colname": "level3"
+				},
+				{
+					"name": "Indie Poptimism",
+					"value": 1672,
+					"colname": "level3"
+				},
+				{
+					"name": "Post-teen pop",
+					"value": 1129,
+					"colname": "level3"
+				}
+			],
+			"colname": "level2"
+		}, {
+			"name": "EDM",
+			"children": [{
+				"name": "Big room",
+				"value": 1206,
+				"colname": "level3"
+			}, {
+				"name": "Electro house",
+				"value": 1511,
+				"colname": "level3"
+			}, {
+				"name": "Pop edm",
+				"value": 1517,
+				"colname": "level3"
+			}, {
+				"name": "Progressive EH",
+				"value": 1809,
+				"colname": "level3"
+			}],
+			"colname": "level2"
+		},
+
+		{
+			"name": "Latin",
+			"children": [{
+				"name": "Latin hip hop",
+				"value": 1656,
+				"colname": "level3"
+			}, {
+				"name": "Latin pop",
+				"value": 1262,
+				"colname": "level3"
+			}, {
+				"name": "Reggaeton",
+				"value": 949,
+				"colname": "level3"
+			}, {
+				"name": "Tropical",
+				"value": 1288,
+				"colname": "level3"
+			}],
+			"colname": "level2"
+		},
+		{
+			"name": "R&B",
+			"children": [{
+				"name": "Hip pop",
+				"value": 1256,
+				"colname": "level3"
+			}, {
+				"name": "Neo soul",
+				"value": 1637,
+				"colname": "level3"
+			}, {
+				"name": "New jack swing",
+				"value": 1133,
+				"colname": "level3"
+			}, {
+				"name": "Urban contemporary",
+				"value": 1405,
+				"colname": "level3"
+			}],
+			"colname": "level2"
+		}, {
+			"name": "Rap",
+			"children": [{
+				"name": "Gangster rap",
+				"value": 1458,
+				"colname": "level3"
+			}, {
+				"name": "Hip hop",
+				"value": 1322,
+				"colname": "level3"
+			}, {
+				"name": "Southern hip hop",
+				"value": 1675,
+				"colname": "level3"
+			}, {
+				"name": "Trap",
+				"value": 1291,
+				"colname": "level3"
+			}],
+			"colname": "level2"
+		}, {
+			"name": "Rock",
+			"children": [{
+				"name": "Album rock",
+				"value": 1065,
+				"colname": "level3"
+			}, {
+				"name": "Classic rock",
+				"value": 1296,
+				"colname": "level3"
+			}, {
+				"name": "Hard rock",
+				"value": 1485,
+				"colname": "level3"
+			}, {
+				"name": "Permanent wave",
+				"value": 1105,
+				"colname": "level3"
+			}],
+			"colname": "level2"
+		}
+
+	],
+	"name": "genre"
+}

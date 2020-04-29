@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Emotions Chart</title>
+        <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+        <script src="/js/datautils.js" charset="utf-8"></script>
+        <script src="/js/boxandwhiskers.js" charset="utf-8"></script>
+        <link rel="stylesheet" type="text/css" href="\css\seamuspages.css">
+	</head>
+	<body>
+        <h1>Emotional Impact of Key and Mode</h1>
+        <p>
+            Boxes span from the first to the third quartile.
+            The center bar indicates the median, while the center
+            dot indicates the mean.
+        </p>
+        <button onmouseup="plotUpdate()">Update visualization</button>
+        
+        <hr>
+        
+        <h2 id="plotTitle">
+        Proportions of <select id="ySelect" class="titleSelects">
+            <!--Available options here are all continuous values-->
+            <option value="track_popularity">Track Popularity</option>
+            <option value="danceability">Danceability</option>
+            <option value="energy">Energy</option>
+            <!--option value="key">Key</option-->
+            <option value="loudness">Loudness</option>
+            <!--option value="mode">Mode</option-->
+            <option value="speechiness">Speechiness</option>
+            <option value="acousticness">Acousticness</option>
+            <option value="instrumentalness">Instrumentalness</option>
+            <option value="liveness">Liveness</option>
+            <option value="valence">Valence</option>
+            <option value="tempo">Tempo</option>
+            <option value="duration_ms">Duration</option>
+        </select> 
+        by <select id="xSelect" class="titleSelects">
+            <option value="track_id">Track</option>
+            <option value="track_artist">Track Artist</option>
+            <option value="track_popularity">Track Popularity</option>
+            <option value="track_album_id">Album</option>
+            <option value="track_album_release_date">Release Date</option>
+            <option value="playlist_id">Playlist</option>
+            <option value="playlist_genre">Playlist Genre</option>
+            <option value="playlist_subgenre">Playlist Subgenre</option>
+            <option value="danceability">Danceability</option>
+            <option value="energy">Energy</option>
+            <option value="key">Key</option>
+            <option value="loudness">Loudness</option>
+            <option value="mode">Mode</option>
+            <option value="speechiness">Speechiness</option>
+            <option value="acousticness">Acousticness</option>
+            <option value="instrumentalness">Instrumentalness</option>
+            <option value="liveness">Liveness</option>
+            <option value="valence">Valence</option>
+            <option value="tempo">Tempo</option>
+            <option value="duration_ms">Duration</option>
+        </select>
+        and <select id="x2Select" class="titleSelects">
+            <option value="none">Nothing Else!</option>
+            <option value="track_id">Track</option>
+            <option value="track_artist">Track Artist</option>
+            <option value="track_popularity">Track Popularity</option>
+            <option value="track_album_id">Album</option>
+            <option value="track_album_release_date">Release Date</option>
+            <option value="playlist_id">Playlist</option>
+            <option value="playlist_genre">Playlist Genre</option>
+            <option value="playlist_subgenre">Playlist Subgenre</option>
+            <option value="danceability">Danceability</option>
+            <option value="energy">Energy</option>
+            <option value="key">Key</option>
+            <option value="loudness">Loudness</option>
+            <option value="mode">Mode</option>
+            <option value="speechiness">Speechiness</option>
+            <option value="acousticness">Acousticness</option>
+            <option value="instrumentalness">Instrumentalness</option>
+            <option value="liveness">Liveness</option>
+            <option value="valence">Valence</option>
+            <option value="tempo">Tempo</option>
+            <option value="duration_ms">Duration</option>
+        </select>
+        </h2>
+        
+
+        <div id="outerFrame">
+            <svg id="visframe" width=1000 height=800></svg>
+        </div>
+
+        <p id="xOptions" class="plotOptionsText">
+            X-Field Buckets:
+            <input type="number" id="xBuckInput" class="optionInputs"
+                max=15 min=1 size=2></select>
+        </p>
+
+        <script type="text/javascript">
+            go("key", "mode", "valence");
+		</script>
+	</body>
+</html>
