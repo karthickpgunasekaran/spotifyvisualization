@@ -196,7 +196,10 @@ function drawBars(data, params){
     var y = params["y"];
     var colors = params["color"];
 
-    var stack = d3.stack().keys(musicKeyNames);
+    //This line could hypothetically cause problems if not all possible keys
+    //are represented in the first data bucket. This isn't the case here, so a
+    //fix isn't mandatory. It would be important to fix for proper generalization though.
+    var stack = d3.stack().keys(Object.keys(data[0]));
 
     //Data, stacked
     var series = stack(data);
@@ -250,6 +253,7 @@ function drawBars(data, params){
         })
         .attr("width", xScale.bandwidth());
 
+
     //AXIS LABELLING:
     //scales for axis labelling purposes
     var xAxScale = d3.scaleBand()
@@ -280,6 +284,7 @@ function drawBars(data, params){
         .attr("x", w*.5)
         .attr("text-anchor", "middle")
         .text(getReadableName(params.x_field));
+
 }
 
 function drawLegend(data, params){
@@ -312,7 +317,7 @@ function drawLegend(data, params){
         .attr("class", "legGroup")
         .style("stroke", "grey")
         .style("fill", function(d, i) {
-            return colors(i+1); //I don't know why, but it needs +1
+            return colors(i);
         });
 
         //RECTS
