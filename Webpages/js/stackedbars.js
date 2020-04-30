@@ -196,10 +196,13 @@ function drawBars(data, params){
     var y = params["y"];
     var colors = params["color"];
 
-    //This line could hypothetically cause problems if not all possible keys
-    //are represented in the first data bucket. This isn't the case here, so a
-    //fix isn't mandatory. It would be important to fix for proper generalization though.
-    var stack = d3.stack().keys(Object.keys(data[0]));
+    var dataKeys = [];
+    data.forEach(function(datum){
+        var temp = Object.keys(datum);
+        if(temp.length > dataKeys.length)
+            dataKeys = temp;
+    });
+    var stack = d3.stack().keys(dataKeys);
 
     //Data, stacked
     var series = stack(data);
@@ -294,7 +297,12 @@ function drawLegend(data, params){
     var y = params["y"];
     var colors = params["color"];
 
-    var dataKeys = Object.keys(data[0]);
+    var dataKeys = [];
+    data.forEach(function(datum){
+        var temp = Object.keys(datum);
+        if(temp.length > dataKeys.length)
+            dataKeys = temp;
+    });
 
     //There will be a header above the legend
     var header_height = h/5;
