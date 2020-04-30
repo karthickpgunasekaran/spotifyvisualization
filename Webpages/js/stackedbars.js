@@ -40,7 +40,9 @@ function go(){
     xSelectList.value="track_popularity";
     xBuckInput.value="5";
     yBuckInput.value="5";
+
     document.getElementById("yOptions").style.visibility = "hidden";
+    ySelectList.style.display = "none"; //Temp measure to disguise missing optional features
 
     d3.csv(CSV_ADDRESS, 
             csv_preprocessing_function, 
